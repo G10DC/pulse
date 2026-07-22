@@ -1,0 +1,11 @@
+{
+  "name": "pulse",
+  "version": "1.0.0",
+  "description": "Project health and quality score synthesizer",
+  "main": "lib/pulse.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/pulse.test.js"
+  },
+  "license": "MIT"
+}
