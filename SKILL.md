@@ -20,3 +20,13 @@ Evaluate project health in current directory:
 ```bash
 node C:/Users/GdC/.gemini/config/skills/pulse/lib/pulse.js --dir "."
 ```
+
+
+---
+
+## ⚡ Spark Breakthrough Enhancement
+
+- **Feature**: **Real-Time Project Health HUD**
+- **Description**: Displays 0-10 composite health score on terminal launch.
+- **Synergy**: Integrated with `archaeologist` (churn) & `lookout` (security).
+- **Framework**: Applied via the `spark` 4-Lens Lateral Ideation Engine.
