@@ -1,6 +1,12 @@
 ---
 name: pulse
-description: Project health and quality score synthesizer. Aggregates metrics across test suites, dependency audits, code hygiene, and documentation completeness into a single composite health score (0 to 10).
+description: >-
+  Project health and quality score synthesizer. Aggregates metrics from mirror,
+  lookout, forge, and documentation completeness into a single composite health
+  score (0 to 10). Use when you need a quick quality snapshot of a project
+  across multiple dimensions. Never reimplement individual analysis passes --
+  delegate to mirror, lookout, and forge; never use as a substitute for actual
+  code review.
 ---
 
 # 🧬 Pulse
