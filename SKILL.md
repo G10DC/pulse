@@ -18,7 +18,7 @@ Project Health & Quality Score Synthesizer. Pulse aggregates diagnostic metrics 
 
 Evaluate project health in current directory:
 ```bash
-node C:/Users/GdC/.gemini/config/skills/pulse/lib/pulse.js --dir "."
+node lib/pulse.js --dir "."
 ```
 
 
