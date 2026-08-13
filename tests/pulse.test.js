@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PulseSynthesizer } from '../lib/pulse.js';
 
-test('PulseSynthesizer computes composite health score', () => {
+test('PulseSynthesizer computes composite health score', async () => {
   const pulse = new PulseSynthesizer();
-  const report = pulse.synthesize({
+  const report = await pulse.synthesize({
     mirrorVerdict: 'PASS',
     lookoutVerdict: 'PASS',
     mutationScore: 85,
