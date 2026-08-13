@@ -1,48 +1,46 @@
 ---
 name: pulse
+status: implemented
 description: >-
-  Project health and quality score synthesizer. Aggregates metrics from mirror,
-  lookout, forge, and documentation completeness into a single composite health
-  score (0 to 10). Use when you need a quick quality snapshot of a project
-  across multiple dimensions. Never reimplement individual analysis passes --
-  delegate to mirror, lookout, and forge; never use as a substitute for actual
-  code review.
+  Composite health score (0-10) that genuinely invokes mirror and lookout on the
+  target directory and blends their verdicts with caller-supplied mutation-score
+  and README-presence signals into a weighted average. Use when you need a quick
+  quality snapshot of a project across multiple dimensions. Never reimplement
+  individual analysis passes -- delegate to mirror, lookout, and forge; never use
+  as a substitute for actual code review.
 ---
 
 # Pulse
 
-Project Health & Quality Score Synthesizer. Pulse aggregates diagnostic metrics across test coverage, security scans, dependency hygiene, and documentation completeness into a unified composite project health score (0 - 10).
+Blends four signals into one composite score (0-10): a code-review verdict, a dependency-audit verdict, a mutation-test score, and README presence. **The one skill in this family with real cross-skill wiring.**
 
-## Scoring Dimensions
+## What it actually does
+Imports `MirrorReviewer`/`LookoutAuditor` directly and calls them, unless you pass
+`metrics.mirrorVerdict`/`lookoutVerdict` yourself. **Caveat**: its own Mirror call reviews a fixed
+placeholder string (`'+ const dummy = true;'`), not your real diff — pass `metrics.mirrorVerdict`
+from a real review if you want that component meaningful. Lookout's call is real and useful as-is
+(reads `<targetDir>/package.json`). `mutationScore` and `hasReadme` are **not computed** — supply
+them or they default to neutral placeholders. Weights: Mirror 30%, Lookout 30%, mutation 20%, docs 20%.
 
-1. **🧪 Test Suite Strength** (0-2.5 pts): Verifies presence of unit test runners and test suites.
-2. **🔒 Security & Dependencies** (0-2.5 pts): Scans manifest files for unpinned packages and missing lockfiles.
-3. **🧹 Code Style & Linters** (0-2.5 pts): Checks for ESLint/Prettier configuration files.
-4. **📚 Documentation Completeness** (0-2.5 pts): Evaluates `README.md`, `LICENSE`, and `CHANGELOG.md` presence.
+## Usage (library, not a CLI)
 
-## Execution Guide
+```js
+import { PulseSynthesizer } from './lib/pulse.js';
 
-Evaluate project health in current directory:
-```bash
-node lib/pulse.js --dir "."
+const result = new PulseSynthesizer().synthesize(
+  { mirrorVerdict: realMirrorResult.verdict, mutationScore: forgeResult?.score, hasReadme: fs.existsSync('README.md') },
+  '/path/to/project'
+);
+// result.healthScore, result.status, result.breakdown
 ```
-
-
----
-
-## Spark Breakthrough Enhancement
-
-- **Feature**: **Real-Time Project Health HUD**
-- **Description**: Displays 0-10 composite health score on terminal launch.
-- **Synergy**: Integrated with `archaeologist` (churn) & `lookout` (security).
-- **Framework**: Applied via the `spark` 4-Lens Lateral Ideation Engine.
-
 
 ## When to use
 
-- Primary domain workflow execution as specified in frontmatter description.
-
+- One composite number for dependency health (real) plus code-review/mutation/docs signals (real
+  if supplied, placeholder otherwise).
 
 ## When NOT to use
 
-- Tasks outside declared skill scope or handled by specialized sibling skills.
+- **As a substitute for reading the underlying Mirror/Lookout/Forge findings** — the score
+  compresses away specifics.
+- **Expecting the auto-invoked Mirror score to reflect your code** — it doesn't, by default.
