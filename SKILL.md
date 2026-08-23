@@ -39,6 +39,12 @@ Base weights: Mirror 30%, Lookout 30%, mutation 20%, docs 20%, renormalised over
 components. A score >= 8.0 with coverage < 0.75 is reported as `GOOD_PARTIAL`, not `EXCELLENT`:
 a high score on one component out of four is a statement about the sample, not the project.
 
+**The floor overrides the mean.** Any measured component at or below 2/10 forces
+`status: 'CRITICAL'` and is named in `critical[]`, whatever the weighted average says.
+Without it, PASS + PASS + README + a mutation score of 0 lands on exactly 8.0 and reads
+as EXCELLENT — a suite that kills no mutations, summarised as excellent health. A mean
+that can hide the worst dimension is not a summary of the project.
+
 ### Why this changed
 Until 2026-08-24 the absent-input paths defaulted optimistically: `mutationScore` to 7.5/10,
 `hasReadme` to present, and both Mirror and Lookout to `PASS` on any exception. `synthesize({})`

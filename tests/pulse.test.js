@@ -69,3 +69,47 @@ test('Mirror is not invoked on a placeholder diff', async () => {
   assert.equal(report.breakdown.codeReview, null);
   assert.ok(report.unknowns.some((u) => u.startsWith('codeReview')));
 });
+
+// --- regression: a catastrophic component cannot be averaged away -----------
+//
+// PASS + PASS + README + a mutation score of 0 lands on exactly 8.0, which the
+// old thresholds reported as EXCELLENT: a test suite that kills no mutations at
+// all, summarised as excellent health. A mean that can hide the worst dimension
+// is not a summary of the project.
+
+test('a component at the critical floor forces CRITICAL regardless of the mean', async () => {
+  const report = await new PulseSynthesizer().synthesize({
+    mirrorVerdict: 'PASS',
+    lookoutVerdict: 'PASS',
+    mutationScore: 0,
+    hasReadme: true,
+  });
+
+  assert.equal(report.healthScore, 8, 'the weighted mean is unchanged');
+  assert.equal(report.status, 'CRITICAL', 'but the verdict is not EXCELLENT');
+  assert.deepEqual(report.critical, ['mutationCoverage']);
+});
+
+test('a healthy project is still EXCELLENT', async () => {
+  const report = await new PulseSynthesizer().synthesize({
+    mirrorVerdict: 'PASS',
+    lookoutVerdict: 'PASS',
+    mutationScore: 100,
+    hasReadme: true,
+  });
+
+  assert.equal(report.status, 'EXCELLENT');
+  assert.deepEqual(report.critical, []);
+});
+
+test('a failing dependency audit is critical too', async () => {
+  const report = await new PulseSynthesizer().synthesize({
+    mirrorVerdict: 'PASS',
+    lookoutVerdict: 'FAIL',
+    mutationScore: 100,
+    hasReadme: true,
+  });
+
+  assert.equal(report.status, 'CRITICAL');
+  assert.deepEqual(report.critical, ['dependencySecurity']);
+});
