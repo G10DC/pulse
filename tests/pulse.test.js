@@ -113,3 +113,55 @@ test('a failing dependency audit is critical too', async () => {
   assert.equal(report.status, 'CRITICAL');
   assert.deepEqual(report.critical, ['dependencySecurity']);
 });
+
+// A verdict can be honest and still be narrower than the component it scores. lookout
+// consults no advisory database and reads no lockfile, so its PASS means "clean
+// manifest", not "clean dependency tree" — and scoring it as a full 10 for
+// dependencySecurity substitutes a good default for evidence never gathered. That is
+// this module's own failure mode, arriving one level further out than last time.
+test('a source that declares its blind spots does not score full marks', async () => {
+  const pulse = new PulseSynthesizer();
+
+  const opaque = await pulse.synthesize({
+    mirrorVerdict: 'PASS', lookoutVerdict: 'PASS', mutationScore: 100, hasReadme: true,
+  });
+  assert.equal(opaque.breakdown.dependencySecurity, 10);
+
+  const declared = await pulse.synthesize({
+    mirrorVerdict: 'PASS',
+    lookoutVerdict: 'PASS',
+    lookoutUnknowns: ['known vulnerabilities: no advisory database is consulted'],
+    mutationScore: 100,
+    hasReadme: true,
+  });
+  assert.ok(declared.breakdown.dependencySecurity < 10,
+    'a manifest-only check certified the dependency tree at full marks');
+  assert.ok(declared.healthScore < opaque.healthScore);
+});
+
+// The blind spots have to reach a reader. Capping the number and dropping the reason
+// would leave the score lower and nobody able to say why.
+test('the blind spots are carried into unknowns, not just into the number', async () => {
+  const declared = await new PulseSynthesizer().synthesize({
+    mirrorVerdict: 'PASS',
+    lookoutVerdict: 'PASS',
+    lookoutUnknowns: ['no lockfile is read', 'no advisory database is consulted'],
+    mutationScore: 100,
+    hasReadme: true,
+  });
+  assert.equal(declared.unknowns.filter((u) => /dependencySecurity/.test(u)).length, 2);
+  assert.match(declared.unknowns.join(' '), /advisory database/);
+});
+
+// A component that was measured is still a component: capping is not excluding.
+test('a partially scoped component still counts towards coverage', async () => {
+  const declared = await new PulseSynthesizer().synthesize({
+    mirrorVerdict: 'PASS',
+    lookoutVerdict: 'PASS',
+    lookoutUnknowns: ['no advisory database is consulted'],
+    mutationScore: 100,
+    hasReadme: true,
+  });
+  assert.equal(declared.coverage, 1);
+  assert.notEqual(declared.breakdown.dependencySecurity, null);
+});
